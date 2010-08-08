@@ -1,0 +1,11 @@
+SimpleGraphs is a Java library designed to make it easy to visualize
+real-time data in AWT or Swing. 
+
+Use the GraphConfiguration object to configure the properties of the
+graph. For an example of how to do this, see GraphDemo.java. To see it
+in action, run "ant run".
+
+To build a jarfile for distribution, run "ant dist". The resulting
+jarfile will be placed in the dist/ directory.
+
+For more information, see the javadocs included in doc/

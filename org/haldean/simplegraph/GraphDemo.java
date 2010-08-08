@@ -26,11 +26,11 @@ public class GraphDemo {
     f.setVisible(true);
 	
     try {
-      double j=0;
+      double j=1.1;
       for (int i=0; i<=360; i++) {
-	j += 0.1;
-	graph.addValue(j * Math.sin(Math.toRadians(i)));
-	Thread.sleep(30);
+	j *= 1.001;
+	graph.addValue((double) (j * Math.sin(Math.toRadians(i))));
+	Thread.sleep(10);
 	if (i==360)
 	  i = 0;
       }

@@ -5,11 +5,18 @@
   <property name="src" location="."/>
   <property name="build" location="build"/>
   <property name="dist" location="dist"/>
+  <property name="docs" location="docs"/>
 
   <target name="compile" description="Compile from source">
     <tstamp/>
     <mkdir dir="${build}"/>
     <javac srcdir="${src}" destdir="${build}"/>
+  </target>
+
+  <target name="docs" description="Generate Javadocs">
+    <mkdir dir="${docs}"/>
+    <javadoc packagenames="org.haldean.simplegraph" author="true"
+	     sourcepath="${src}" destdir="${docs}"/>
   </target>
  
   <target name="dist" depends="compile"
@@ -29,5 +36,6 @@
   <target name="clean" description="Clean up binaries">
     <delete dir="${build}"/>
     <delete dir="${dist}"/>
+    <delete dir="${docs}"/>
   </target>
 </project>

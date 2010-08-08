@@ -3,8 +3,14 @@ package org.haldean.simplegraph;
 import java.awt.Color;
 import java.awt.Font;
 
+/**
+ * A data object that contains configuration parameters
+ * for {@link GraphComponent}
+ *
+ * @author Will Brown (will.h.brown@gmail.com)
+ */
 public class GraphConfiguration {
-  private Color backgroundColor = new Color(28, 25, 20);
+  private Color backgroundColor = Color.DARK_GRAY;
   private Color borderColor = Color.DARK_GRAY;
   private Color lineColor = Color.WHITE;
   private Color axesColor = Color.LIGHT_GRAY;

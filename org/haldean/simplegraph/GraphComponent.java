@@ -13,10 +13,11 @@ import java.util.LinkedList;
 import javax.swing.JComponent;
 
 /**
- *  A class which draws a graph based on a series of given result sets.
- *  The graph automatically scales along the Y axis and can be manually
- *  scaled along the X axis.
- *  @author William Brown
+ *  A component which draws a graph when provided with a feed of
+ *  real-time data. The graph automatically scales along the Y axis
+ *  and can be manually scaled along the X axis.
+ *
+ *  @author Will Brown (will.h.brown@gmail.com)
  */
 public class GraphComponent<E extends Number> extends Component {
 	private LinkedList<E> series;
@@ -26,9 +27,9 @@ public class GraphComponent<E extends Number> extends Component {
 	private int width;
 	private int height;
 
-	/* Area left at the top and bottom to ensure the
-	 * graph never quite touches the edge */
-	private double margin = 1;
+	/* Area left at the top and bottom to ensure the graph never quite
+	 * touches the edge, as a percentage of the value range */
+	private double margin = 0.1;
 
 	/* The number of data points visible on the graph */
 	private int sampleCount = 100;
@@ -56,7 +57,7 @@ public class GraphComponent<E extends Number> extends Component {
 	 * Create a new {@link GraphComponent} with the specified
 	 * {@link GraphConfiguration}.
 	 *
-	 * @param The {@link GraphConfiguration} to use.
+	 * @param gc The {@link GraphConfiguration} to use.
 	 */
 	public GraphComponent(GraphConfiguration gc) {
 		series = new LinkedList<E>();
@@ -102,7 +103,7 @@ public class GraphComponent<E extends Number> extends Component {
 	/**
 	 * Set the {@link GraphConfiguration} of the graph.
 	 *
-	 * @param config The configuration to assign.
+	 * @param gc The configuration to assign.
 	 */
 	public void setGraphConfiguration(GraphConfiguration gc) {
 		config = gc;
@@ -118,9 +119,9 @@ public class GraphComponent<E extends Number> extends Component {
 	/**
 	 * Set the scale along the X axis.
 	 *
-	 * @param sampleCount The number of samples shown along the
-	 * axis. The graph will automatically adjust to show the most
-	 * recent sampleCount samples.
+	 * @param newSampleCount The number of samples shown along the
+	 * axis. The graph will automatically adjust to show the most recent
+	 * sampleCount samples.
 	 */
 	public void setSampleCount(int newSampleCount) {
 		sampleCount = newSampleCount;
@@ -133,7 +134,7 @@ public class GraphComponent<E extends Number> extends Component {
 	/**
 	 * Add a value to the data series.
 	 *
-	 * @param p The value to add
+	 * @param value The value to add
 	 */
 	public void addValue(E value) {
 		/* Create a lock on the series list */
@@ -146,10 +147,10 @@ public class GraphComponent<E extends Number> extends Component {
 
 		double doubleValue = value.doubleValue();
 		/* Adjust the bounds if necessary */
-		if (doubleValue > (maximum - margin))
-			maximum = doubleValue + margin;
-		if (doubleValue < (minimum + margin))
-			minimum = doubleValue - margin;
+		if (doubleValue > maximum)
+			maximum = doubleValue;
+		if (doubleValue < minimum)
+			minimum = doubleValue;
 
 		repaint();
 	}
@@ -184,7 +185,7 @@ public class GraphComponent<E extends Number> extends Component {
 	 * horizontal line representing the given sample value
 	 */
 	private int pointToY(double p) {
-		return (int) (((maximum - p) / (maximum - minimum)) * getSize().getHeight());
+		return (int) (((maximum - (1 - margin) * p) / (maximum - minimum)) * getSize().getHeight());
 	}
 
 	/**
@@ -200,7 +201,7 @@ public class GraphComponent<E extends Number> extends Component {
 	/**
 	 * Paints the graph onto the provided graphics object
 	 *
-	 * @param g The graphics object to paint onto
+	 * @param canvas The graphics object to paint onto
 	 */
 	public void paint(Graphics canvas) {
 		/* The Y component of the X axis can shift based on scaling, so
@@ -258,8 +259,12 @@ public class GraphComponent<E extends Number> extends Component {
 						canvas.setColor(config.getInspectorColor());
 
 						canvas.drawOval(x-2, y-2, 4, 4);
+
 						canvas.drawLine(x, y, 0, y);
 						canvas.drawString(series.get(i).toString(), 1, y - 2);
+						canvas.drawLine(x, y, x, y0);
+						canvas.drawString(new Integer(Math.max(0, lastSampleIndex - sampleCount) + i).toString(),
+															x + 2, y0 + 3 + config.getLabelFont().getSize());
 
 						canvas.setColor(config.getLineColor());
 					}
@@ -274,7 +279,7 @@ public class GraphComponent<E extends Number> extends Component {
 	private class GraphMouseHandler extends MouseAdapter implements MouseMotionListener {
 		public void mouseExited(MouseEvent e) {
 			if (config.getEnableInspector()) {
-				currentFocusVertical = width - 1;
+				currentFocusVertical = (int) (0.75 * width) - 1;
 				repaint();
 			}
 		}
