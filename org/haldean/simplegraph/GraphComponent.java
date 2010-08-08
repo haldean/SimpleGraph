@@ -6,6 +6,9 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseMotionListener;
 import java.util.LinkedList;
 import javax.swing.JComponent;
 
@@ -29,6 +32,7 @@ public class GraphComponent<E extends Number> extends Component {
 
 	/* The number of data points visible on the graph */
 	private int sampleCount = 100;
+	private double pixelsPerSample;
 
 	/* The index of the last added sample */
 	private int lastSampleIndex = 0;
@@ -36,6 +40,9 @@ public class GraphComponent<E extends Number> extends Component {
 	/* The configuration object that holds the color, font and name of
 	 * the graph */
 	private GraphConfiguration config;
+
+	/* The currently-moused-over x-value */
+	private int currentFocusVertical;
 
 	/**
 	 * Create a new {@link GraphComponent} with the default
@@ -59,8 +66,13 @@ public class GraphComponent<E extends Number> extends Component {
 					Dimension size = getSize();
 					width = (int) size.getWidth();
 					height = (int) size.getHeight();
+
+					pixelsPerSample = width / sampleCount;
 				}
 			});
+		GraphMouseHandler mouseHandler = new GraphMouseHandler();
+		addMouseListener(mouseHandler);
+		addMouseMotionListener(mouseHandler);
 	}
 
 	/**
@@ -112,6 +124,8 @@ public class GraphComponent<E extends Number> extends Component {
 	 */
 	public void setSampleCount(int newSampleCount) {
 		sampleCount = newSampleCount;
+		pixelsPerSample = width / sampleCount;
+
 		checkSeriesSize();
 		repaint();
 	}
@@ -159,16 +173,18 @@ public class GraphComponent<E extends Number> extends Component {
 	 * horizontal line representing the given sample value
 	 */
 	private int pointToY(E p) {
-		return (int) (((maximum - p.doubleValue()) / (maximum - minimum)) * getSize().getHeight());
+		return pointToY(p.doubleValue());
 	}
 
 	/**
-	 * Get the pixel location of the x-axis
+	 * Convert a value to a canvas pixel location.
 	 *
-	 * @return Pixels between the top of the graph and the X-axis
+	 * @param p The sample value
+	 * @return The number of pixels between the top of the graph and the
+	 * horizontal line representing the given sample value
 	 */
-	private int zeroToY() {
-		return (int) ((maximum / (maximum - minimum)) * getSize().getHeight());
+	private int pointToY(double p) {
+		return (int) (((maximum - p) / (maximum - minimum)) * getSize().getHeight());
 	}
 
 	/**
@@ -189,7 +205,7 @@ public class GraphComponent<E extends Number> extends Component {
 	public void paint(Graphics canvas) {
 		/* The Y component of the X axis can shift based on scaling, so
 		 * we calculate it once to save computation */
-		int y0 = zeroToY();
+		int y0 = pointToY(0);
 
 		/* Background */
 		canvas.setColor(config.getBackgroundColor());
@@ -201,6 +217,7 @@ public class GraphComponent<E extends Number> extends Component {
 
 		/* Horizontal axis */
 		canvas.setColor(config.getAxisColor());
+		canvas.setFont(config.getLabelFont());
 		canvas.drawLine(0, y0, width, y0);
 
 		if (config.getTickDistance() != 0) {
@@ -211,12 +228,14 @@ public class GraphComponent<E extends Number> extends Component {
 			while (tickLocation < width) {
 				int tickPixel = pointToX(tickLocation);
 				canvas.drawLine(tickPixel, y0, tickPixel, y0 + 2);
+				if (config.isTickLabelLocation(tickLocation + firstDisplayedIndex))
+					canvas.drawString(new Integer(tickLocation + firstDisplayedIndex).toString(),
+														tickPixel, y0 + 3 + config.getLabelFont().getSize());
 				tickLocation += config.getTickDistance();
 			}
-		}
+		}				
 
 		/* Graph label */
-		canvas.setFont(config.getLabelFont());
 		canvas.drawString(config.getLabelValue(), 1, y0 - 2);
 
 		canvas.setColor(config.getLineColor());
@@ -234,11 +253,41 @@ public class GraphComponent<E extends Number> extends Component {
 					int x = pointToX(i);
 
 					canvas.drawLine(lastX, lastY, x, y);
+					if (config.getEnableInspector() &&
+							currentFocusVertical > lastX && currentFocusVertical <= x) {
+						canvas.setColor(config.getInspectorColor());
+
+						canvas.drawOval(x-2, y-2, 4, 4);
+						canvas.drawLine(x, y, 0, y);
+						canvas.drawString(series.get(i).toString(), 1, y - 2);
+
+						canvas.setColor(config.getLineColor());
+					}
 
 					lastY = y;
 					lastX = x;
 				}
 			}
+		}
+	}
+
+	private class GraphMouseHandler extends MouseAdapter implements MouseMotionListener {
+		public void mouseExited(MouseEvent e) {
+			if (config.getEnableInspector()) {
+				currentFocusVertical = width - 1;
+				repaint();
+			}
+		}
+
+		public void mouseMoved(MouseEvent e) {
+			if (config.getEnableInspector()) {
+				currentFocusVertical = e.getX();
+				repaint();
+			}
+		}
+
+		public void mouseDragged(MouseEvent e) {
+			;
 		}
 	}
 }

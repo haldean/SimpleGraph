@@ -8,12 +8,16 @@ public class GraphConfiguration {
   private Color borderColor = Color.DARK_GRAY;
   private Color lineColor = Color.WHITE;
   private Color axesColor = Color.LIGHT_GRAY;
+  private Color inspectorColor = Color.RED;
 
   private Font labelFont = new Font(Font.SANS_SERIF, Font.PLAIN, 10);
   private String labelValue = "";
 
   private int tickDistance = 50;
+  private int tickSkip = 4;
   private boolean enableTickLabels = true;
+
+  private boolean enableInspector = true;
 
   /**
    * Create a {@link GraphConfiguration} with the default colors
@@ -43,9 +47,13 @@ public class GraphConfiguration {
 	borderColor = gc.borderColor;
 	lineColor = gc.lineColor;
 	axesColor = gc.axesColor;
+	inspectorColor = gc.inspectorColor;
 	labelFont = gc.labelFont;
 	labelValue = gc.labelValue;
 	tickDistance = gc.tickDistance;
+	tickSkip = gc.tickSkip;
+	enableTickLabels = gc.enableTickLabels;
+	enableInspector = gc.enableInspector;
   }
 
   /**
@@ -106,6 +114,20 @@ public class GraphConfiguration {
   }
 
   /**
+   * Set the inspector color of the graph.
+   */
+  public void setInspectorColor(Color bg) {
+	inspectorColor = bg;
+  }
+
+  /**
+   * Get the inspector color of the graph.
+   */
+  public Color getInspectorColor() {
+	return inspectorColor;
+  }
+
+  /**
    * Set the font used to draw the label.
    */
   public void setLabelFont(Font font) {
@@ -160,5 +182,40 @@ public class GraphConfiguration {
    */
   public boolean getEnableTickLabels() {
 	return enableTickLabels;
+  }
+
+  /**
+   * Set the number of ticks to skip between ticks with labels. For
+   * example, setting this to two means there will be a label on every
+   * third tick, or setting it to zero puts a label on every tick.
+   */
+  public void setTickSkip(int skip) {
+	tickSkip = skip;
+  }
+
+  /*
+   * Get the number of ticks to skip between labels
+   */
+  public int getTickSkip() {
+	return tickSkip;
+  }
+
+  boolean isTickLabelLocation(double value) {
+	return getEnableTickLabels() &&
+	  value % (tickDistance * tickSkip) == 0;
+  }
+
+  /**
+   * Set to true to show the inspector.
+   */
+  public void setEnableInspector(boolean enable) {
+	enableInspector = enable;
+  }
+
+  /**
+   * Returns true if the inspector is shown.
+   */
+  public boolean getEnableInspector() {
+	return enableInspector;
   }
 }
