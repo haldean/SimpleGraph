@@ -10,7 +10,10 @@
   <target name="compile" description="Compile from source">
     <tstamp/>
     <mkdir dir="${build}"/>
-    <javac srcdir="${src}" destdir="${build}"/>
+    <javac srcdir="${src}" destdir="${build}">
+      <compilerarg value="-Xlint:deprecation" />
+      <compilerarg value="-Xlint:unchecked" />
+    </javac>
   </target>
 
   <target name="docs" description="Generate Javadocs">

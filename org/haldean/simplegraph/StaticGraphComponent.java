@@ -10,16 +10,17 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseMotionListener;
 import java.util.LinkedList;
+import java.util.List;
 import javax.swing.JComponent;
 
 /**
- *  A component which draws a graph when provided with a feed of
- *  real-time data. The graph automatically scales along the Y axis
- *  and can be manually scaled along the X axis.
+ *  A component which draws a graph when provided with a list of
+ *  precomputed values. The graph automatically scales along the X and
+ *  Y axes.
  *
  *  @author Will Brown (will.h.brown@gmail.com)
  */
-public class GraphComponent<E extends Number> extends Component {
+public class StaticGraphComponent<E extends Number> extends Component {
 	private LinkedList<E> series;
 	private double maximum = 1;
 	private double minimum = -1;
@@ -31,13 +32,6 @@ public class GraphComponent<E extends Number> extends Component {
 	 * touches the edge, as a percentage of the value range */
 	private double margin = 0.1;
 
-	/* The number of data points visible on the graph */
-	private int sampleCount = 100;
-	private double pixelsPerSample;
-
-	/* The index of the last added sample */
-	private int lastSampleIndex = 0;
-
 	/* The configuration object that holds the color, font and name of
 	 * the graph */
 	private GraphConfiguration config;
@@ -46,20 +40,20 @@ public class GraphComponent<E extends Number> extends Component {
 	private int currentFocusVertical;
 
 	/**
-	 * Create a new {@link GraphComponent} with the default
+	 * Create a new {@link StaticGraphComponent} with the default
 	 * {@link GraphConfiguration}.
 	 */
-	public GraphComponent() {
+	public StaticGraphComponent() {
 		this(new GraphConfiguration());
 	}
 
 	/**
-	 * Create a new {@link GraphComponent} with the specified
+	 * Create a new {@link StaticGraphComponent} with the specified
 	 * {@link GraphConfiguration}.
 	 *
 	 * @param gc The {@link GraphConfiguration} to use.
 	 */
-	public GraphComponent(GraphConfiguration gc) {
+	public StaticGraphComponent(GraphConfiguration gc) {
 		series = new LinkedList<E>();
 		config = gc;
 		addComponentListener(new ComponentAdapter() {
@@ -67,8 +61,7 @@ public class GraphComponent<E extends Number> extends Component {
 					Dimension size = getSize();
 					width = (int) size.getWidth();
 					height = (int) size.getHeight();
-
-					pixelsPerSample = width / sampleCount;
+					repaint();
 				}
 			});
 		GraphMouseHandler mouseHandler = new GraphMouseHandler();
@@ -117,54 +110,53 @@ public class GraphComponent<E extends Number> extends Component {
 	}
 
 	/**
-	 * Set the scale along the X axis.
+	 * Add a value to the data series and refresh the graph.
 	 *
-	 * @param newSampleCount The number of samples shown along the
-	 * axis. The graph will automatically adjust to show the most recent
-	 * sampleCount samples.
+	 * @param value The value to add
 	 */
-	public void setSampleCount(int newSampleCount) {
-		sampleCount = newSampleCount;
-		pixelsPerSample = width / sampleCount;
-
-		checkSeriesSize();
-		repaint();
+	public void addValue(E value) {
+		addValue(value, true);
 	}
 
 	/**
 	 * Add a value to the data series.
 	 *
-	 * @param value The value to add
+	 * @param value The value to add.
+	 * @param repaint Pass true to repaint the graph after the value is
+	 * added.
 	 */
-	public void addValue(E value) {
+	private void addValue(E value, boolean repaint) {
 		/* Create a lock on the series list */
 		synchronized (series) {
 			series.add(value);
 		}
 
-		lastSampleIndex++;
-		checkSeriesSize();
-
 		double doubleValue = value.doubleValue();
 		/* Adjust the bounds if necessary */
-		if (doubleValue > maximum)
+		if (doubleValue > maximum) {
 			maximum = doubleValue;
-		if (doubleValue < minimum)
-			minimum = doubleValue;
+		}
 
-		repaint();
+		if (doubleValue < minimum) {
+			minimum = doubleValue;
+		}
+
+		if (repaint) {
+			repaint();
+		}
 	}
 
 	/**
-	 * Trims the data if we have more points then necessary
+	 * Add a list of values to the data series.
+	 *
+	 * @param values The values to add.
 	 */
-	private void checkSeriesSize() {
-		synchronized (series) {
-			while (series.size() > sampleCount) {
-				series.removeFirst();
-			}
+	public void addValueList(List<E> values) {
+		for (E value : values) {
+			addValue(value, false);
 		}
-	}		
+		repaint();
+	}
 
 	/**
 	 * Convert a value to a canvas pixel location.
@@ -195,7 +187,7 @@ public class GraphComponent<E extends Number> extends Component {
 	 * @return The pixel X corresponding to that time index
 	 */
 	private int pointToX(int x) {
-		return (int) (((float) x / (float) sampleCount) * getSize().getWidth());
+		return (int) (((float) x / (float) series.size()) * getSize().getWidth());
 	}
 
 	/**
@@ -222,17 +214,16 @@ public class GraphComponent<E extends Number> extends Component {
 		canvas.drawLine(0, y0, width, y0);
 
 		if (config.getTickDistance() != 0) {
-			int firstDisplayedIndex = Math.max(0, lastSampleIndex - sampleCount);
-			int tickLocation = config.getTickDistance() - 
-				(firstDisplayedIndex % config.getTickDistance());
+			int tickLocation = 0;
+			int tickPixel = 0;
 
-			while (tickLocation < width) {
-				int tickPixel = pointToX(tickLocation);
+			while (tickPixel < width) {
 				canvas.drawLine(tickPixel, y0, tickPixel, y0 + 2);
-				if (config.isTickLabelLocation(tickLocation + firstDisplayedIndex))
-					canvas.drawString(new Integer(tickLocation + firstDisplayedIndex).toString(),
+				if (config.isTickLabelLocation(tickLocation))
+					canvas.drawString(new Integer(tickLocation).toString(),
 														tickPixel, y0 + 3 + config.getLabelFont().getSize());
 				tickLocation += config.getTickDistance();
+				tickPixel = pointToX(tickLocation);
 			}
 		}				
 
@@ -263,8 +254,7 @@ public class GraphComponent<E extends Number> extends Component {
 						canvas.drawLine(x, y, 0, y);
 						canvas.drawString(series.get(i).toString(), 1, y - 2);
 						canvas.drawLine(x, y, x, y0);
-						canvas.drawString(new Integer(Math.max(0, lastSampleIndex - sampleCount) + i).toString(),
-															x + 2, y0 + 3 + config.getLabelFont().getSize());
+						canvas.drawString(new Integer(i).toString(), x+2, y0 - 3);
 
 						canvas.setColor(config.getLineColor());
 					}
@@ -279,7 +269,7 @@ public class GraphComponent<E extends Number> extends Component {
 	private class GraphMouseHandler extends MouseAdapter implements MouseMotionListener {
 		public void mouseExited(MouseEvent e) {
 			if (config.getEnableInspector()) {
-				currentFocusVertical = (int) (0.75 * width) - 1;
+				currentFocusVertical = -1;
 				repaint();
 			}
 		}
