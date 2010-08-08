@@ -21,8 +21,6 @@ public class GraphFactory {
    * precision.
    *
    * @param config The configuration to use.
-   * @param numberType A class representing the precision of the
-   * number to use.
    */
   public static <E extends Number> StreamingGraphComponent<E> forStreamingData(GraphConfiguration config) {
     return new StreamingGraphComponent<E>(config);
@@ -34,8 +32,8 @@ public class GraphFactory {
    *
    * @param values The values to graph.
    */
-  public static <E extends Number> StaticGraphComponent<E> forList(List<E> numbers) {
-    return forList(numbers, new GraphConfiguration());
+  public static <E extends Number> StaticGraphComponent<E> forList(List<E> values) {
+    return forList(values, new GraphConfiguration());
   }
 
   /**
@@ -44,9 +42,9 @@ public class GraphFactory {
    * @param values The values to graph.
    * @param config The configuration to use.
    */
-  public static <E extends Number> StaticGraphComponent<E> forList(List<E> numbers, GraphConfiguration config) {
+  public static <E extends Number> StaticGraphComponent<E> forList(List<E> values, GraphConfiguration config) {
     StaticGraphComponent<E> graph = new StaticGraphComponent<E>(config);
-    graph.addValueList(numbers);
+    graph.addValueList(values);
     return graph;
   }
 }

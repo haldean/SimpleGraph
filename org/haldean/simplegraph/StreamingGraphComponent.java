@@ -46,7 +46,7 @@ public class StreamingGraphComponent<E extends Number> extends Component {
 	private int currentFocusVertical;
 
 	/**
-	 * Create a new {@link GraphComponent} with the default
+	 * Create a new {@link StreamingGraphComponent} with the default
 	 * {@link GraphConfiguration}.
 	 */
 	public StreamingGraphComponent() {
@@ -54,7 +54,7 @@ public class StreamingGraphComponent<E extends Number> extends Component {
 	}
 
 	/**
-	 * Create a new {@link GraphComponent} with the specified
+	 * Create a new {@link StreamingGraphComponent} with the specified
 	 * {@link GraphConfiguration}.
 	 *
 	 * @param gc The {@link GraphConfiguration} to use.

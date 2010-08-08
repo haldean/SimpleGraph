@@ -5,7 +5,7 @@ import java.awt.Font;
 
 /**
  * A data object that contains configuration parameters
- * for {@link GraphComponent}
+ * for GraphComponent objects
  *
  * @author Will Brown (will.h.brown@gmail.com)
  */
