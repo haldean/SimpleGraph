@@ -1,5 +1,6 @@
 package org.haldean.simplegraph;
 
+import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
@@ -14,7 +15,7 @@ import javax.swing.JComponent;
  *  scaled along the X axis.
  *  @author William Brown
  */
-public class GraphComponent<E extends Number> extends JComponent {
+public class GraphComponent<E extends Number> extends Component {
 	private LinkedList<E> series;
 	private double maximum = 1;
 	private double minimum = -1;
@@ -28,6 +29,9 @@ public class GraphComponent<E extends Number> extends JComponent {
 
 	/* The number of data points visible on the graph */
 	private int sampleCount = 100;
+
+	/* The index of the last added sample */
+	private int lastSampleIndex = 0;
 
 	/* The configuration object that holds the color, font and name of
 	 * the graph */
@@ -55,7 +59,6 @@ public class GraphComponent<E extends Number> extends JComponent {
 					Dimension size = getSize();
 					width = (int) size.getWidth();
 					height = (int) size.getHeight();
-					System.out.println("Resized.");
 				}
 			});
 	}
@@ -124,6 +127,7 @@ public class GraphComponent<E extends Number> extends JComponent {
 			series.add(value);
 		}
 
+		lastSampleIndex++;
 		checkSeriesSize();
 
 		double doubleValue = value.doubleValue();
@@ -182,30 +186,40 @@ public class GraphComponent<E extends Number> extends JComponent {
 	 *
 	 * @param g The graphics object to paint onto
 	 */
-	public void paintComponent(Graphics g) {
-		Graphics2D g2 = (Graphics2D)g;
-
+	public void paint(Graphics canvas) {
 		/* The Y component of the X axis can shift based on scaling, so
 		 * we calculate it once to save computation */
 		int y0 = zeroToY();
 
 		/* Background */
-		g2.setColor(config.getBackgroundColor());
-		g2.fillRect(0, 0, width, height);
+		canvas.setColor(config.getBackgroundColor());
+		canvas.fillRect(0, 0, width, height);
 
 		/* Border */
-		g2.setColor(config.getBorderColor());
-		g2.drawRect(0, 0, width, height);
+		canvas.setColor(config.getBorderColor());
+		canvas.drawRect(0, 0, width, height);
 
 		/* Horizontal axis */
-		g2.setColor(config.getAxisColor());
-		g2.drawLine(0, y0, width, y0);
+		canvas.setColor(config.getAxisColor());
+		canvas.drawLine(0, y0, width, y0);
+
+		if (config.getTickDistance() != 0) {
+			int firstDisplayedIndex = Math.max(0, lastSampleIndex - sampleCount);
+			int tickLocation = config.getTickDistance() - 
+				(firstDisplayedIndex % config.getTickDistance());
+
+			while (tickLocation < width) {
+				int tickPixel = pointToX(tickLocation);
+				canvas.drawLine(tickPixel, y0, tickPixel, y0 + 2);
+				tickLocation += config.getTickDistance();
+			}
+		}
 
 		/* Graph label */
-		g2.setFont(config.getLabelFont());
-		g2.drawString(config.getLabelValue(), 1, y0 - 2);
+		canvas.setFont(config.getLabelFont());
+		canvas.drawString(config.getLabelValue(), 1, y0 - 2);
 
-		g2.setColor(config.getLineColor());
+		canvas.setColor(config.getLineColor());
 
 		/* Create a lock on the series list so that the series
 		 * cannot be updated while we are drawing */
@@ -219,7 +233,7 @@ public class GraphComponent<E extends Number> extends JComponent {
 					int y = pointToY(series.get(i));
 					int x = pointToX(i);
 
-					g2.drawLine(lastX, lastY, x, y);
+					canvas.drawLine(lastX, lastY, x, y);
 
 					lastY = y;
 					lastX = x;

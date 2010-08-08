@@ -1,0 +1,33 @@
+<project name="SimpleGraph" default="dist" basedir=".">
+  <description>
+    A library to easily graph real-time data using AWT or Swing.
+  </description>
+  <property name="src" location="."/>
+  <property name="build" location="build"/>
+  <property name="dist" location="dist"/>
+
+  <target name="compile" description="Compile from source">
+    <tstamp/>
+    <mkdir dir="${build}"/>
+    <javac srcdir="${src}" destdir="${build}"/>
+  </target>
+ 
+  <target name="dist" depends="compile"
+	  description="Generate the distribution jarfile">
+    <mkdir dir="${dist}"/>
+    <jar jarfile="${dist}/simplegraph-${DSTAMP}.jar"
+	 basedir="${build}"/>
+  </target>
+
+  <target name="run" depends="compile" description="Run the included
+    demo">
+    <java fork="true" classname="org.haldean.simplegraph.GraphDemo">
+      <classpath path="${build}"/>
+    </java>
+  </target>
+
+  <target name="clean" description="Clean up binaries">
+    <delete dir="${build}"/>
+    <delete dir="${dist}"/>
+  </target>
+</project>

@@ -2,6 +2,7 @@ package org.haldean.simplegraph;
 
 import java.awt.Dimension;
 import javax.swing.JFrame;
+import javax.swing.WindowConstants;
 
 public class GraphDemo {
   /**
@@ -13,12 +14,15 @@ public class GraphDemo {
     JFrame f = new JFrame();
 
     GraphConfiguration gc = new GraphConfiguration("Amplifying Sine");
+    gc.setTickDistance(45);
+
     final GraphComponent<Double> graph = new GraphComponent<Double>(gc);
     graph.setPreferredSize(new Dimension(700, 400));
     graph.setSampleCount(720);
 
     f.add(graph);
     f.pack();
+    f.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
     f.setVisible(true);
 	
     try {
@@ -26,7 +30,7 @@ public class GraphDemo {
       for (int i=0; i<=360; i++) {
 	j += 0.1;
 	graph.addValue(j * Math.sin(Math.toRadians(i)));
-	Thread.sleep(20);
+	Thread.sleep(30);
 	if (i==360)
 	  i = 0;
       }

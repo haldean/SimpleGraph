@@ -3,7 +3,7 @@ package org.haldean.simplegraph;
 import java.awt.Color;
 import java.awt.Font;
 
-public class GraphConfiguration<E extends Number> {
+public class GraphConfiguration {
   private Color backgroundColor = new Color(28, 25, 20);
   private Color borderColor = Color.DARK_GRAY;
   private Color lineColor = Color.WHITE;
@@ -12,7 +12,7 @@ public class GraphConfiguration<E extends Number> {
   private Font labelFont = new Font(Font.SANS_SERIF, Font.PLAIN, 10);
   private String labelValue = "";
 
-  private E tickDistance = 50;
+  private int tickDistance = 50;
   private boolean enableTickLabels = true;
 
   /**
@@ -134,16 +134,17 @@ public class GraphConfiguration<E extends Number> {
   }
 
   /**
-   * Set the number of units between ticks
+   * Set the number of units between ticks. Set to zero to disable
+   * ticks altogether.
    */
-  public void setTickDistance(E distance) {
+  public void setTickDistance(int distance) {
 	tickDistance = distance;
   }
 
   /**
    * Get the number of units between ticks
    */
-  public double getTickDistance() {
+  public int getTickDistance() {
 	return tickDistance;
   }
 
